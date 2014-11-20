@@ -36,7 +36,8 @@ public class VarianceChecker {
 
 	public void check(Class<?> clazz) throws IllegalVarianceException {
 		for (Method method : clazz.getMethods()) {
-			if (extension.ignoresMethod(method)) {
+			if (method.getAnnotation(Ignored.class) != null
+					|| extension.ignoresMethod(method)) {
 				continue;
 			}
 
