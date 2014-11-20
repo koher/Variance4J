@@ -41,10 +41,28 @@ public enum Variance {
 	}
 
 	public boolean isValidCovariantly() {
-		return !isContravariant();
+		return !contravariant;
 	}
 
 	public boolean isValidContravariantly() {
-		return !isCovariant();
+		return !covariant;
+	}
+
+	public Variance transpose() {
+		return of(contravariant, covariant);
+	}
+
+	public Variance not() {
+		return of(!covariant, !contravariant);
+	}
+
+	public static Variance and(Variance left, Variance right) {
+		return Variance.of(left.covariant && right.covariant,
+				left.contravariant && right.contravariant);
+	}
+
+	public static Variance or(Variance left, Variance right) {
+		return Variance.of(left.covariant || right.covariant,
+				left.contravariant || right.contravariant);
 	}
 }

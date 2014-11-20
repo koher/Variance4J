@@ -1,5 +1,9 @@
 package org.koherent.variance;
 
+import static org.koherent.variance.Variance.COVARIANT;
+import static org.koherent.variance.Variance.CONTRAVARIANT;
+import static org.koherent.variance.Variance.INVARIANT;
+
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -8,8 +12,34 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 
 public class VarianceChecker {
+	private static final VarianceExtension EMPTY_EXTENSION = new VarianceExtension() {
+		@Override
+		public Variance getVariance(TypeVariable<?> typeVariable) {
+			return INVARIANT;
+		}
+
+		@Override
+		public boolean ignoresMethod(Method method) {
+			return false;
+		}
+	};
+
+	private VarianceExtension extension;
+
+	public VarianceChecker() {
+		this(EMPTY_EXTENSION);
+	}
+
+	public VarianceChecker(VarianceExtension extension) {
+		this.extension = extension;
+	}
+
 	public void check(Class<?> clazz) throws IllegalVarianceException {
 		for (Method method : clazz.getMethods()) {
+			if (extension.ignoresMethod(method)) {
+				continue;
+			}
+
 			Type returnType = method.getGenericReturnType();
 			if (!getValidity(returnType).isValidCovariantly()) {
 				throw new IllegalVarianceException(method, returnType, false);
@@ -26,7 +56,7 @@ public class VarianceChecker {
 
 	private Variance getValidity(Type type) {
 		if (type instanceof Class) {
-			return Variance.INVARIANT;
+			return INVARIANT;
 		} else if (type instanceof GenericArrayType) {
 			GenericArrayType genericArrayType = (GenericArrayType) type;
 
@@ -38,34 +68,38 @@ public class VarianceChecker {
 			TypeVariable<?>[] typeParameters = rawType.getTypeParameters();
 			Type[] typeArguments = parameterizedType.getActualTypeArguments();
 
-			boolean validCovariantly = true;
-			boolean validContravariantly = true;
+			Variance validity = INVARIANT;
 
 			int numberOfParameters = typeParameters.length;
 			for (int parameterIndex = 0; parameterIndex < numberOfParameters; parameterIndex++) {
-				Variance parameterVariance = Variance
-						.of(typeParameters[parameterIndex]);
-				Variance argumentValidity = getValidity(typeArguments[parameterIndex]);
+				Type typeArgument = typeArguments[parameterIndex];
+				Variance argumentValidity = getValidity(typeArgument);
+				Variance parameterVariance = getExtendedVariance(typeParameters[parameterIndex]);
+				if (typeArgument instanceof WildcardType) {
+					if (((WildcardType) typeArgument).getLowerBounds().length > 0) {
+						parameterVariance = Variance.or(parameterVariance,
+								CONTRAVARIANT);
+					} else {
+						parameterVariance = Variance.or(parameterVariance,
+								COVARIANT);
+					}
+				}
 
 				if (parameterVariance.isValidCovariantly()) {
-					validCovariantly &= argumentValidity.isValidCovariantly();
-					validContravariantly &= argumentValidity
-							.isValidContravariantly();
+					validity = Variance.or(validity, argumentValidity);
 				}
 
 				if (parameterVariance.isValidContravariantly()) {
-					validCovariantly &= argumentValidity
-							.isValidContravariantly();
-					validContravariantly &= argumentValidity
-							.isValidCovariantly();
+					validity = Variance.or(validity,
+							argumentValidity.transpose());
 				}
 			}
 
-			return Variance.of(!validContravariantly, !validCovariantly);
+			return validity;
 		} else if (type instanceof TypeVariable) {
 			TypeVariable<?> typeVariable = (TypeVariable<?>) type;
 
-			return Variance.of(typeVariable);
+			return getExtendedVariance(typeVariable);
 		} else if (type instanceof WildcardType) {
 			WildcardType wildcardType = (WildcardType) type;
 
@@ -78,5 +112,10 @@ public class VarianceChecker {
 		}
 
 		throw new IllegalArgumentException(type.getTypeName());
+	}
+
+	private Variance getExtendedVariance(TypeVariable<?> typeVariable) {
+		return Variance.or(Variance.of(typeVariable),
+				extension.getVariance(typeVariable));
 	}
 }
