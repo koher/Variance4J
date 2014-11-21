@@ -2,63 +2,76 @@ package org.koherent.variance;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 
 public class IllegalVarianceException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	private final Method method;
-	private final Type type;
-	private final boolean forParameter;
+	private final List<Element> elements;
 
-	private static String createMessage(Method method, Type type,
-			boolean forParameter) {
-		StringBuilder messageBuilder = new StringBuilder();
+	public IllegalVarianceException(List<Element> elements) {
+		super(elements.toString());
 
-		messageBuilder.append(forParameter ? "An parameter type "
-				: "The return type ");
-		messageBuilder.append(type.getTypeName());
-		messageBuilder.append(" of '");
-		messageBuilder.append(method.getGenericReturnType().getTypeName());
-		messageBuilder.append(" ");
-		messageBuilder.append(method.getDeclaringClass().getName());
-		messageBuilder.append("#");
-		messageBuilder.append(method.getName());
-		messageBuilder.append("(");
+		this.elements = Collections.unmodifiableList(elements);
+	}
 
-		boolean first = true;
-		for (Type parameterType : method.getGenericParameterTypes()) {
-			if (first) {
-				first = false;
-			} else {
-				messageBuilder.append(", ");
-			}
+	public List<Element> getElements() {
+		return elements;
+	}
 
-			messageBuilder.append(parameterType.getTypeName());
+	public static class Element {
+		private final Method method;
+		private final Type type;
+		private final boolean forParameter;
+
+		public Element(Method method, Type type, boolean forParameter) {
+			this.method = method;
+			this.type = type;
+			this.forParameter = forParameter;
 		}
 
-		messageBuilder.append(")' is illegal.");
+		public Method getMethod() {
+			return method;
+		}
 
-		return messageBuilder.toString();
-	}
+		public Type getType() {
+			return type;
+		}
 
-	public IllegalVarianceException(Method method, Type type,
-			boolean forParameter) {
-		super(createMessage(method, type, forParameter));
+		public boolean isForParameter() {
+			return forParameter;
+		}
 
-		this.method = method;
-		this.type = type;
-		this.forParameter = forParameter;
-	}
+		@Override
+		public String toString() {
+			StringBuilder messageBuilder = new StringBuilder();
 
-	public Method getMethod() {
-		return method;
-	}
+			messageBuilder.append(forParameter ? "An parameter type "
+					: "The return type ");
+			messageBuilder.append(type.getTypeName());
+			messageBuilder.append(" of '");
+			messageBuilder.append(method.getGenericReturnType().getTypeName());
+			messageBuilder.append(" ");
+			messageBuilder.append(method.getDeclaringClass().getName());
+			messageBuilder.append("#");
+			messageBuilder.append(method.getName());
+			messageBuilder.append("(");
 
-	public Type getType() {
-		return type;
-	}
+			boolean first = true;
+			for (Type parameterType : method.getGenericParameterTypes()) {
+				if (first) {
+					first = false;
+				} else {
+					messageBuilder.append(", ");
+				}
 
-	public boolean isForParameter() {
-		return forParameter;
+				messageBuilder.append(parameterType.getTypeName());
+			}
+
+			messageBuilder.append(")' is illegal.");
+
+			return messageBuilder.toString();
+		}
 	}
 }

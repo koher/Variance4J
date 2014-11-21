@@ -10,6 +10,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VarianceChecker {
 	private static final VarianceExtension EMPTY_EXTENSION = new VarianceExtension() {
@@ -35,6 +37,8 @@ public class VarianceChecker {
 	}
 
 	public void check(Class<?> clazz) throws IllegalVarianceException {
+		List<IllegalVarianceException.Element> elements = new ArrayList<IllegalVarianceException.Element>();
+
 		for (Method method : clazz.getMethods()) {
 			if (method.getAnnotation(Ignored.class) != null
 					|| extension.ignoresMethod(method)) {
@@ -43,15 +47,20 @@ public class VarianceChecker {
 
 			Type returnType = method.getGenericReturnType();
 			if (!getValidity(returnType).isValidCovariantly()) {
-				throw new IllegalVarianceException(method, returnType, false);
+				elements.add(new IllegalVarianceException.Element(method,
+						returnType, false));
 			}
 
 			for (Type parameterType : method.getGenericParameterTypes()) {
 				if (!getValidity(parameterType).isValidContravariantly()) {
-					throw new IllegalVarianceException(method, parameterType,
-							true);
+					elements.add(new IllegalVarianceException.Element(method,
+							parameterType, true));
 				}
 			}
+		}
+
+		if (elements.size() > 0) {
+			throw new IllegalVarianceException(elements);
 		}
 	}
 
