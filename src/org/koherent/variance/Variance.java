@@ -1,6 +1,6 @@
 package org.koherent.variance;
 
-import java.lang.reflect.TypeVariable;
+import javax.lang.model.element.TypeParameterElement;
 
 public enum Variance {
 	INVARIANT, COVARIANT, CONTRAVARIANT, BIVARIANT;
@@ -22,14 +22,15 @@ public enum Variance {
 				: (contravariant ? CONTRAVARIANT : INVARIANT);
 	}
 
-	public static Variance of(TypeVariable<?> typeVariable)
+	public static Variance of(TypeParameterElement typeParameter)
 			throws IllegalArgumentException {
-		if (typeVariable == null) {
-			throw new IllegalArgumentException("'typeVariable' cannot be null.");
+		if (typeParameter == null) {
+			throw new IllegalArgumentException(
+					"'typeParameter' cannot be null.");
 		}
 
-		return of(typeVariable.getAnnotation(Out.class) != null,
-				typeVariable.getAnnotation(In.class) != null);
+		return of(typeParameter.getAnnotation(Out.class) != null,
+				typeParameter.getAnnotation(In.class) != null);
 	}
 
 	public boolean isCovariant() {

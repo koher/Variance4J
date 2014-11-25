@@ -1,22 +1,19 @@
 package org.koherent.variance.test;
 
-import org.junit.Test;
+import java.io.File;
+import java.util.Collections;
+
 import org.koherent.variance.Ignored;
-import org.koherent.variance.IllegalVarianceException;
 import org.koherent.variance.Out;
-import org.koherent.variance.VarianceChecker;
 
-public class IgnoredTest {
-	@Test
-	public void testOK() throws IllegalVarianceException {
-		new VarianceChecker().check(OK.class);
+public class IgnoredTest extends VarianceProcessorTest {
+	@Override
+	protected Iterable<? extends File> getFiles() {
+		return Collections.singleton(new File(
+				"test/org/koherent/variance/test/IgnoredTest.java"));
 	}
 
-	@Test(expected = IllegalVarianceException.class)
-	public void testNG() throws IllegalVarianceException {
-		new VarianceChecker().check(NG.class);
-	}
-
+	@AnnotationProcessorTest(error = false)
 	private static interface OK<@Out T> {
 		T foo();
 
@@ -24,6 +21,7 @@ public class IgnoredTest {
 		void bar(T t);
 	}
 
+	@AnnotationProcessorTest(error = true)
 	private static interface NG<@Out T> {
 		T foo();
 

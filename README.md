@@ -1,54 +1,88 @@
 Variance4J
 ============================
 
-__Variance4J__ provides the __declaration-site variance annotations like C# for Java__.
+__Variance4J__ provides the __declaration-site variance annotations for Java like in C#__.
+
+![Variance4J](variance4j.png)
+
+How to Use
+----------------------------
+
+1. Write `@In` and `@Out` in your code.
+2. Compile your code with Variance4J.
+
+### javac
+
+```
+javac -cp path/to/variance4j.jar Foo.java 
+```
+
+### Eclipse
+
+1. Check `Enable project specific settings` in `Properties > Java Compiler > Annotation Processing`.
+2. Ensure `Enable annotation processing` is checked in `Properties > Java Compiler > Annotation Processing`.
+3. Check `Enable project specific settings` in `Properties > Java Compiler > Annotation Processing > Factory Path`.
+4. Add _variance4j.jar_ to `Properties > Java Compiler > Annotation Processing > Factory Path`.
+5. Add _variance4j.jar_ to `Properties > Java Build Path > Libraries`.
+
+Realized and Not Realized
+----------------------------
+
+### Realized
+
+It can report the errors at compile time if the return type or the parameter types of the methods are illegal.
 
 ```java
+interface Foo<@Out T> {
+    void bar(T t); // Error
+
+    void baz(Consumer<? super T> consumer); // OK
+}
+```
+
+### Not Realized 
+
+It __cannot__ eliminate _Wildcards_: `? extends` and `? super`. They are still necessary to realize variances in Java even if you use `@In` and `@Out`.
+
+```java
+Foo<Cat> cat = ...;
+Foo<Animal> animal = car; // Error
+```
+
+```java
+Foo<Cat> cat = ...;
+Foo<? extends Animal> animal = car; // OK
+```
+
+__The following simple rule is useful__ to decide which _Wildcard_ to apply.
+
+- If declared as `@In`, use `? super`.
+- If declared as `@Out`, use `? extends`.
+
+```java
+/* Declaration-site */
+// Contravariant for T, Covariant for R
 interface Function<@In T, @Out R> {
         R apply(T t);
 }
 ```
 
-It is possible to check variances with `VarianceChecker`.
-
 ```java
-interface Foo<@Out T> {
-	T foo(); // OK
-}
+/* Use-site */
+// Variables
+Function<? super String, ? extends Number> function = ...;
 
-interface Bar<@In T> {
-	T bar(); // NG
-}
+// Parameter Types
+void foo(Function<? super String, ? extends Number>) { ... }
 
-// in main
-try {
-	VarianceChecker checker = new VarianceChecker();
-
-	checker.check(Foo.class); // OK
-	checker.check(Bar.class); // NG
-} catch (IllegalVarianceException e) {
-	e.printStackTrace();
-}
+// Return types
+Function<? super String, ? extends Number> bar() { ... }
 ```
 
-```
-org.koherent.variance.IllegalVarianceException: The return type T of 'T Bar#bar()' is illegal.
-```
-
-It can also check more complex types like the following.
-
-```java
-interface Baz<@In T, @Out U> {
-        Function<? super T, ? extends U> baz(Function<? super U, ? extends T> f); // OK
-}
-```
-
-Features
+Requirements
 ----------------------------
 
-- `@In`, `@Out` : Declaration-site variance annotations by Java annotations
-- `VarianceChecker` : Checks variance validity based on `@In` and `@Out`
-- `VarianceExtension` : Annotates variances for existing classes
+- Java 8
 
 License
 ----------------------------

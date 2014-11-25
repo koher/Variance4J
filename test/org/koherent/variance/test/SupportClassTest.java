@@ -1,16 +1,14 @@
 package org.koherent.variance.test;
 
-import org.junit.Test;
-import org.koherent.variance.IllegalVarianceException;
-import org.koherent.variance.VarianceChecker;
+import java.io.File;
+import java.util.Arrays;
 
-public class SupportClassTest {
-	@Test
-	public void testOK() throws IllegalVarianceException {
-		VarianceChecker checker = new VarianceChecker();
-
-		checker.check(Supplier.class);
-		checker.check(Consumer.class);
-		checker.check(Function.class);
+public class SupportClassTest extends VarianceProcessorTest {
+	@Override
+	protected Iterable<? extends File> getFiles() {
+		return Arrays.asList(new File(
+				"test/org/koherent/variance/test/Supplier.java"), new File(
+				"test/org/koherent/variance/test/Consumer.java"), new File(
+				"test/org/koherent/variance/test/Function.java"));
 	}
 }

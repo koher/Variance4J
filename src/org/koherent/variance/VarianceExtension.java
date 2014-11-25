@@ -1,10 +1,17 @@
 package org.koherent.variance;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.TypeVariable;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeParameterElement;
 
 public interface VarianceExtension {
-	Variance getVariance(TypeVariable<?> typeVariable);
+	void initialize(ProcessingEnvironment processingEnvironment);
 
-	boolean ignoresMethod(Method method);
+	Variance getVariance(TypeParameterElement typeParameter);
+
+	boolean ignoresMethod(ExecutableElement method);
+
+	public static interface Factory {
+		VarianceExtension create(ProcessingEnvironment processingEnvironment);
+	}
 }
