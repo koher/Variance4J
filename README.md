@@ -25,10 +25,10 @@ javac -cp path/to/variance4j.jar Foo.java
 4. Add _variance4j.jar_ to `Properties > Java Compiler > Annotation Processing > Factory Path`.
 5. Add _variance4j.jar_ to `Properties > Java Build Path > Libraries`.
 
-Realized and Not Realized
+Achieved and Not Achieved
 ----------------------------
 
-### Realized
+### Achieved
 
 It can report the errors at compile time if the return type or the parameter types of the methods are illegal.
 
@@ -40,7 +40,7 @@ interface Foo<@Out T> {
 }
 ```
 
-### Not Realized 
+### Not Achieved 
 
 It __cannot__ eliminate _Wildcards_: `? extends` and `? super`. They are still necessary to realize variances in Java even if you use `@In` and `@Out`.
 
