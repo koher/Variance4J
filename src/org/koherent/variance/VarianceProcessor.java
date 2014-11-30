@@ -100,8 +100,7 @@ public class VarianceProcessor extends AbstractProcessor {
 						.map(checkedType -> Arrays
 								.stream(checkedType.getAnnotation(
 										VarianceExtending.class).value()))
-						.reduce(Stream.empty(),
-								(left, right) -> Stream.concat(left, right))
+						.reduce(Stream.empty(), Stream::concat)
 						.map(typeName -> elementUtils.getTypeElement(typeName))
 						.collect(Collectors.toSet()));
 			} else {

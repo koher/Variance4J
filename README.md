@@ -54,10 +54,30 @@ Foo<Cat> cat = ...;
 Foo<? extends Animal> animal = car; // OK
 ```
 
-__The following simple rule is useful__ to decide which _Wildcard_ to apply.
+For What?
+----------------------------
+
+It is difficult to use _Wildcards_ correctly. For example, the following code has a problem.
+
+```java
+interface Foo {
+    Comparable<Integer> getComparable();
+}
+```
+
+It is impossible to declare `interface Bar extends Foo` with `Comparable<Number> getComparable()` with the `Foo` above. The better one is the below.
+
+```java
+interface Foo {
+    Comparable<? super Integer> getComparable();
+}
+```
+
+With `@In` and `@Out`, we never wonder which to use `? super` or `? extends`. __The following simple rule is useful__ to decide which _Wildcard_ to apply.
 
 - If declared as `@In`, use `? super`.
 - If declared as `@Out`, use `? extends`.
+- If declared without `@In` nor `@Out`, neither `? super` nor `? extends` is necessary.
 
 ```java
 /* Declaration-site */
@@ -78,6 +98,8 @@ void foo(Function<? super String, ? extends Number>) { ... }
 // Return types
 Function<? super String, ? extends Number> bar() { ... }
 ```
+
+If _Variance4J_ provided just the annotations, `@In` and `@Out`, it would be hard to declare types of methods legally. _Variance4J_ provides the annotation processor to check the types so that programmers never declare illegal methods with `@In` and/or `@Out`.
 
 Requirements
 ----------------------------
