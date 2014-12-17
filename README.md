@@ -9,7 +9,7 @@ How to Use
 ----------------------------
 
 1. Write `@In` and `@Out` in your code.
-2. Compile your code with Variance4J.
+2. Compile your code with _Variance4J_.
 
 ### javac
 
@@ -61,15 +61,15 @@ It is difficult to use _Wildcards_ correctly. For example, the following code ha
 
 ```java
 interface Foo {
-    Comparable<Integer> getComparable();
+    Comparator<Integer> getComparator();
 }
 ```
 
-It is impossible to declare `interface Bar extends Foo` with `Comparable<Number> getComparable()` with the `Foo` above. The better one is the below.
+It is impossible to declare `interface Bar extends Foo` with `Comparator<Number> getComparator()` with the `Foo` above. The better one is the below.
 
 ```java
 interface Foo {
-    Comparable<? super Integer> getComparable();
+    Comparator<? super Integer> getComparator();
 }
 ```
 

@@ -26,6 +26,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -113,68 +114,109 @@ public class VarianceProcessor extends AbstractProcessor {
 					.getAllMembers(type)
 					.forEach(
 							member -> {
-								if (member.getKind() != ElementKind.METHOD) {
-									return;
-								}
-
 								Set<Modifier> modifiers = member.getModifiers();
 								if (modifiers.contains(Modifier.PRIVATE)
 										|| modifiers.contains(Modifier.STATIC)) {
 									return;
 								}
 
-								ExecutableElement method = (ExecutableElement) member;
-								String methodName = method.getSimpleName()
-										+ "("
-										+ String.join(
-												", ",
-												method.getParameters()
-														.stream()
-														.map(variableElement -> variableElement
-																.asType()
-																.toString())
-														.collect(
-																Collectors
-																		.toList()))
-										+ ")";
+								if (member.getKind() == ElementKind.FIELD) {
+									VariableElement field = (VariableElement) member;
 
-								if (method.getAnnotation(Ignored.class) != null
-										|| extension.ignoresMethod(method)) {
-									return;
+									TypeMirror fieldType = field.asType();
+									if (!getValidity(extension, fieldType)
+											.isValidCovariantly()
+											|| (!modifiers
+													.contains(Modifier.FINAL) && !getValidity(
+													extension, fieldType)
+													.isValidContravariantly())) {
+										messager.printMessage(
+												Kind.ERROR,
+												"The type "
+														+ fieldType
+														+ " of "
+														+ type.getQualifiedName()
+														+ "#" + field
+														+ " is illegal.", field);
+									}
+								} else if (member.getKind() == ElementKind.METHOD) {
+									ExecutableElement method = (ExecutableElement) member;
+									String methodName = method.getSimpleName()
+											+ "("
+											+ String.join(
+													", ",
+													method.getParameters()
+															.stream()
+															.map(variableElement -> variableElement
+																	.asType()
+																	.toString())
+															.collect(
+																	Collectors
+																			.toList()))
+											+ ")";
+
+									if (method.getAnnotation(Ignored.class) != null
+											|| extension.ignoresMethod(method)) {
+										return;
+									}
+
+									TypeMirror returnType = method
+											.getReturnType();
+									if (!getValidity(extension, returnType)
+											.isValidCovariantly()) {
+										messager.printMessage(
+												Kind.ERROR,
+												"The return type "
+														+ returnType
+														+ " of "
+														+ type.getQualifiedName()
+														+ "#" + methodName
+														+ " is illegal.",
+												method);
+									}
+
+									method.getParameters()
+											.forEach(
+													parameter -> {
+														TypeMirror parameterType = parameter
+																.asType();
+														if (!getValidity(
+																extension,
+																parameterType)
+																.isValidContravariantly()) {
+															messager.printMessage(
+																	Kind.ERROR,
+																	"The parameter type "
+																			+ parameterType
+																			+ " of "
+																			+ type.getQualifiedName()
+																			+ "#"
+																			+ methodName
+																			+ " is illegal.",
+																	method);
+														}
+													});
+
+									method.getThrownTypes()
+											.forEach(
+													thrownType -> {
+														if (!getValidity(
+																extension,
+																thrownType)
+																.isValidCovariantly()) {
+															messager.printMessage(
+																	Kind.ERROR,
+																	"The thrown type "
+																			+ thrownType
+																			+ " of "
+																			+ type.getQualifiedName()
+																			+ "#"
+																			+ methodName
+																			+ " is illegal.",
+																	method);
+														}
+													});
 								}
-
-								TypeMirror returnType = method.getReturnType();
-								if (!getValidity(extension, returnType)
-										.isValidCovariantly()) {
-									messager.printMessage(
-											Kind.ERROR,
-											"The return type " + returnType
-													+ " of "
-													+ type.getQualifiedName()
-													+ "#" + methodName
-													+ " is illegal.", method);
-								}
-
-								method.getParameters()
-										.forEach(
-												parameter -> {
-													TypeMirror parameterType = parameter
-															.asType();
-													if (!getValidity(extension,
-															parameterType)
-															.isValidContravariantly()) {
-														messager.printMessage(
-																Kind.ERROR,
-																"The parameter type "
-																		+ parameterType
-																		+ " of "
-																		+ type.getQualifiedName()
-																		+ "#"
-																		+ methodName
-																		+ " is illegal.",
-																parameter);
-													}
-												});
 							});
 		});
 

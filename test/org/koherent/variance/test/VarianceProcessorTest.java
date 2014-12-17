@@ -105,7 +105,7 @@ public abstract class VarianceProcessorTest {
 		}
 
 		Pattern pattern = Pattern
-				.compile("The (return type|parameter type) .+ of (.+)#(.+) is illegal\\.");
+				.compile("The (return |parameter |thrown )?type .+ of (.+)#(.+) is illegal\\.");
 		Set<String> errorTypeNames = new HashSet<String>();
 		Map<String, List<String>> typeNameToErrorMessages = new HashMap<String, List<String>>();
 		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticCollector

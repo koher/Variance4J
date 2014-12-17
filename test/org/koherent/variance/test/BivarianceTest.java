@@ -87,4 +87,21 @@ public class BivarianceTest extends VarianceProcessorTest {
 	private static interface NG10<@In @Out T> {
 		public void foo(Consumer<? super T> t);
 	}
+
+	@AnnotationProcessorTest(error = true)
+	private static abstract class NG11<@In @Out T> {
+		@SuppressWarnings("unused")
+		public final T t = null;
+	}
+
+	@AnnotationProcessorTest(error = true)
+	private static abstract class NG12<@In @Out T> {
+		@SuppressWarnings("unused")
+		public T t;
+	}
+
+	@AnnotationProcessorTest(error = true)
+	private static interface NG13<@In @Out X extends Throwable> {
+		public void foo() throws X;
+	}
 }

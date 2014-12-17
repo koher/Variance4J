@@ -86,4 +86,21 @@ public class ContravarianceTest extends VarianceProcessorTest {
 	private static interface NG5<@In T> {
 		public void foo(Consumer<? super T> t);
 	}
+
+	@AnnotationProcessorTest(error = true)
+	private static class NG6<@In T> {
+		@SuppressWarnings("unused")
+		public final T t = null;
+	}
+
+	@AnnotationProcessorTest(error = true)
+	private static class NG7<@In T> {
+		@SuppressWarnings("unused")
+		public T t;
+	}
+
+	@AnnotationProcessorTest(error = true)
+	private static interface NG8<@In X extends Throwable> {
+		public void foo() throws X;
+	}
 }

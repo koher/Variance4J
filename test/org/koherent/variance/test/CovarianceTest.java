@@ -62,6 +62,17 @@ public class CovarianceTest extends VarianceProcessorTest {
 		public void foo(Consumer<? extends T> t);
 	}
 
+	@AnnotationProcessorTest(error = false)
+	private static class OK10<@Out T> {
+		@SuppressWarnings("unused")
+		public final T t = null;
+	}
+
+	@AnnotationProcessorTest(error = false)
+	private static interface OK11<@Out X extends Throwable> {
+		public void foo() throws X;
+	}
+
 	@AnnotationProcessorTest(error = true)
 	private static interface NG1<@Out T> {
 		public void foo(T t);
@@ -86,4 +97,11 @@ public class CovarianceTest extends VarianceProcessorTest {
 	private static interface NG5<@Out T> {
 		public void foo(Supplier<? extends T> t);
 	}
+
+	@AnnotationProcessorTest(error = true)
+	private static class NG6<@Out T> {
+		@SuppressWarnings("unused")
+		public T t;
+	}
+
 }
